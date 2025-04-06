@@ -19,29 +19,33 @@ mp_drawing_styles = mp.solutions.drawing_styles
 # Custom drawing specifications with purple color for mesh
 purple_mesh_spec = mp_drawing.DrawingSpec(color=(250, 17, 219), thickness=1, circle_radius=1)
 
-def generate_clothing_colors(skin_rgb, season):
+def generate_clothing_colors(skin_rgb, season, undertone):
     # Step 1: Normalize and convert RGB to HSL
     r, g, b = [x / 255.0 for x in skin_rgb]
     h, l, s = colorsys.rgb_to_hls(r, g, b)  # Hue, Lightness, Saturation
+
     hue_deg = h * 360
-    
-    # Generate color harmonies
     analogous = [(hue_deg + 30) % 360, (hue_deg - 30) % 360]
     complementary = [(hue_deg + 150) % 360, (hue_deg + 180) % 360, (hue_deg + 210) % 360]
     triadic = [(hue_deg + 120) % 360, (hue_deg + 240) % 360]
+
     all_hues = analogous + complementary + triadic
-    
-    # Season-specific lightness and saturation adjustments
+
     options = {
-        "summer": (0.55, 0.75),
-        "autumn": (0.95, 0.35),
-        "winter": (0.90, 0.40),
-        "spring": (0.85, 0.50)
+        "summer": (0.75, 0.55 * (1 - s)),
+        "autumn": (0.35, 0.95 * (1 - s)),
+        "winter": (0.40, 0.90 * (1 - s)),
+        "spring": (0.50, 0.85 * (1 - s))
     }
+    undertones = {
+        "warm": np.array([45, 0, 0]),
+        "neutral": np.array([0, 20, 0]),
+        "cool": np.array([0, 0, 45])
+    }
+    transformation = np.array([45 * (1 - l), 0, 45 * l])
     
-    # Convert back to RGB
-    results = [colorsys.hls_to_rgb(hue/360, options[season][1], options[season][0]) for hue in all_hues]
-    return np.array(results) * 255
+    results = [colorsys.hls_to_rgb(hue/360, options[season.lower()][0], options[season.lower()][1]) for hue in all_hues]
+    return np.random.permutation((np.array(results) * 255 + undertones[undertone.lower()] + transformation) % 360)
 
 def main():
     st.set_page_config(page_title="koreai", layout="wide")
@@ -268,7 +272,7 @@ def show_results_screen():
     cheek_rgb = [int(st.session_state.feature_colors['Cheek'][2]), 
                 int(st.session_state.feature_colors['Cheek'][1]), 
                 int(st.session_state.feature_colors['Cheek'][0])]
-    custom_colors = generate_clothing_colors(cheek_rgb, season[0])
+    custom_colors = generate_clothing_colors(cheek_rgb, season[0], undertone[0])
     
     # Display custom colors
     cols = st.columns(len(custom_colors))
@@ -311,7 +315,7 @@ def show_explore_screen():
     cheek_rgb = [int(st.session_state.feature_colors['Cheek'][2]), 
                 int(st.session_state.feature_colors['Cheek'][1]), 
                 int(st.session_state.feature_colors['Cheek'][0])]
-    custom_colors = generate_clothing_colors(cheek_rgb, season)
+    custom_colors = generate_clothing_colors(cheek_rgb, season, undertone)
     
     # Add standard palette colors as well for comparison
     standard_colors = display_palette_for_overlay(season)
