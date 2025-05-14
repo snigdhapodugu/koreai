@@ -5,6 +5,8 @@ To use this tool:
 2. Open the terminal.
 3. Enter 'streamlit run model.py'.
 
+Learn more about our project [here](https://devpost.com/software/koreai).
+
 ## Inspiration
 Korean color analysis has been very popular in Western media (TikTok, Instagram, YouTube) for the past few years. However, the service can be costly and inaccessible, so we wanted to create a tool that allows you to receive an analysis at your convenience. 
 
